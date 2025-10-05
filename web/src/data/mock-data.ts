@@ -1,0 +1,141 @@
+export const mockKPIData = {
+  totalProjects: 12,
+  activeProjects: 8,
+  completedTasks: 156,
+  totalRisks: 23,
+  highRisks: 5,
+  mediumRisks: 12,
+  lowRisks: 6,
+  totalUsers: 45,
+  activeUsers: 32,
+};
+
+export const mockProjects = [
+  {
+    id: "1",
+    name: "JerryGFit Platform",
+    status: "active",
+    progress: 75,
+    dueDate: "2024-02-15",
+    team: ["John", "Sarah", "Mike"],
+  },
+  {
+    id: "2",
+    name: "Mobile App Development",
+    status: "active",
+    progress: 45,
+    dueDate: "2024-03-01",
+    team: ["Anna", "David"],
+  },
+  {
+    id: "3",
+    name: "AI Integration",
+    status: "planning",
+    progress: 20,
+    dueDate: "2024-04-30",
+    team: ["Lisa", "Tom", "Emma"],
+  },
+];
+
+export const mockRisks = [
+  {
+    id: "R001",
+    title: "Backend API Performance Issues",
+    description: "High load may cause response time degradation",
+    severity: "High",
+    probability: "Medium",
+    impact: "High",
+    status: "Open",
+    owner: "John Smith",
+    createdDate: "2024-01-10",
+    mitigationPlan: "Implement caching and load balancing",
+  },
+  {
+    id: "R002",
+    title: "Third-party Integration Delays",
+    description: "External service provider may delay implementation",
+    severity: "Medium",
+    probability: "High",
+    impact: "Medium",
+    status: "In Progress",
+    owner: "Sarah Johnson",
+    createdDate: "2024-01-15",
+    mitigationPlan: "Identify alternative providers",
+  },
+  {
+    id: "R003",
+    title: "Budget Overrun",
+    description: "Project costs may exceed allocated budget",
+    severity: "Medium",
+    probability: "Low",
+    impact: "High",
+    status: "Open",
+    owner: "Mike Davis",
+    createdDate: "2024-01-20",
+    mitigationPlan: "Regular budget reviews and cost optimization",
+  },
+];
+
+export const mockTasks = [
+  {
+    id: "T001",
+    title: "Setup user authentication",
+    description: "Implement Google OAuth and JWT tokens",
+    status: "todo",
+    priority: "High",
+    assignee: "John Smith",
+    dueDate: "2024-02-01",
+    project: "JerryGFit Platform",
+  },
+  {
+    id: "T002",
+    title: "Create dashboard UI",
+    description: "Design and implement main dashboard interface",
+    status: "in-progress",
+    priority: "High",
+    assignee: "Sarah Johnson",
+    dueDate: "2024-01-28",
+    project: "JerryGFit Platform",
+  },
+  {
+    id: "T003",
+    title: "API documentation",
+    description: "Document all API endpoints",
+    status: "done",
+    priority: "Medium",
+    assignee: "Mike Davis",
+    dueDate: "2024-01-25",
+    project: "JerryGFit Platform",
+  },
+  {
+    id: "T004",
+    title: "Mobile app wireframes",
+    description: "Create wireframes for mobile application",
+    status: "todo",
+    priority: "Medium",
+    assignee: "Anna Wilson",
+    dueDate: "2024-02-10",
+    project: "Mobile App Development",
+  },
+];
+
+export const mockAnalytics = {
+  projectsOverTime: [
+    { month: "Jan", active: 5, completed: 2 },
+    { month: "Feb", active: 7, completed: 3 },
+    { month: "Mar", active: 8, completed: 4 },
+    { month: "Apr", active: 10, completed: 6 },
+    { month: "May", active: 12, completed: 8 },
+    { month: "Jun", active: 9, completed: 10 },
+  ],
+  taskCompletion: [
+    { name: "Completed", value: 156, color: "#10b981" },
+    { name: "In Progress", value: 45, color: "#f59e0b" },
+    { name: "Todo", value: 89, color: "#6b7280" },
+  ],
+  riskDistribution: [
+    { name: "High", value: 5, color: "#ef4444" },
+    { name: "Medium", value: 12, color: "#f59e0b" },
+    { name: "Low", value: 6, color: "#10b981" },
+  ],
+};
