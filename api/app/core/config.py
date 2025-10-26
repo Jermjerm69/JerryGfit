@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
         case_sensitive=True,
-        extra="ignore"  # Ignore extra fields from .env (like frontend vars)
+        extra="ignore" 
     )
 
 

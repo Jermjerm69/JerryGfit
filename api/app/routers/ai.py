@@ -12,6 +12,25 @@ from app.core.security import get_current_user
 router = APIRouter()
 
 
+@router.get("/history")
+def get_ai_history(
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get AI generation history for the current user."""
+    ai_requests = (
+        db.query(AIRequest)
+        .filter(AIRequest.user_id == current_user.id)
+        .order_by(AIRequest.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return ai_requests
+
+
 @router.post("/generate", response_model=AIGenerateResponse)
 def generate_ai_content(
     request: AIGenerateRequest,
@@ -78,19 +97,40 @@ def generate_ai_content(
                 "due_date": (datetime.utcnow() + timedelta(days=7)).isoformat(),
             },
         ]
-    else:  # generate_content
+    elif request.request_type == "caption":
         mock_data = [
             {
-                "type": "suggestion",
-                "content": "Consider implementing feature flags for gradual rollout",
+                "type": "fitness_caption",
+                "content": "Transform your body, transform your life! 💪 Every workout is a step closer to your goals. Remember, the only bad workout is the one that didn't happen. Stay consistent, stay motivated, and watch the results follow! #FitnessJourney #NoPainNoGain",
+            }
+        ]
+    elif request.request_type == "hashtag":
+        mock_data = [
+            {
+                "type": "fitness_hashtags",
+                "content": "#FitnessMotivation #GymLife #WorkoutRoutine #HealthyLifestyle #FitFam #TrainHard #FitnessGoals #BodyTransformation #GymMotivation #FitnessAddict #GetFit #FitnessInspiration #WorkoutMotivation #FitLife #GymTime",
+            }
+        ]
+    elif request.request_type == "workout_plan":
+        mock_data = [
+            {
+                "type": "workout_plan",
+                "content": "**Upper Body Strength Workout**\n\nWarm-up (5 mins):\n- Arm circles: 30 seconds\n- Shoulder rolls: 30 seconds\n\nMain Workout:\n1. Push-ups: 3 sets x 12 reps\n2. Dumbbell Rows: 3 sets x 10 reps per arm\n3. Shoulder Press: 3 sets x 12 reps\n4. Bicep Curls: 3 sets x 15 reps\n5. Tricep Dips: 3 sets x 10 reps\n\nCool-down: 5 minutes stretching",
+            }
+        ]
+    else:  # generate_content or other types
+        mock_data = [
+            {
+                "type": "fitness_tip",
+                "content": "💡 **Fitness Tip**: Consistency beats intensity. It's better to work out 3-4 times a week regularly than to go hard for a week and burn out. Build sustainable habits that you can maintain long-term for lasting results.",
             },
             {
-                "type": "suggestion",
-                "content": "Add comprehensive error handling and logging",
+                "type": "nutrition_tip",
+                "content": "🥗 **Nutrition Tip**: Protein is essential for muscle recovery and growth. Aim for 1.6-2.2g per kg of body weight daily. Good sources include lean meats, fish, eggs, Greek yogurt, and plant-based options like lentils and tofu.",
             },
             {
-                "type": "suggestion",
-                "content": "Set up CI/CD pipeline for automated testing and deployment",
+                "type": "motivation",
+                "content": "🔥 **Motivation**: Your body can stand almost anything. It's your mind you have to convince. When you feel like quitting, remember why you started. Every rep, every step, every healthy choice is an investment in yourself!",
             },
         ]
 
