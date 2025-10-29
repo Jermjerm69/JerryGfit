@@ -1,13 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import random
+import json
+import logging
 
 from app.database import get_db
 from app.models.user import User
 from app.models.ai_request import AIRequest
 from app.schemas.ai import AIGenerateRequest, AIGenerateResponse
 from app.core.security import get_current_user
+from app.services.openai_service import openai_service
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -37,117 +43,142 @@ def generate_ai_content(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Generate AI content - returns mock data for now, OpenAI integration later."""
+    """Generate AI content using OpenAI API."""
 
-    # Mock data based on request type
-    mock_data = []
+    # Validate model parameter
+    model = request.model or "gpt-4"
+    if model not in ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"]:
+        model = "gpt-4"
 
-    if request.request_type == "generate_risks":
-        mock_data = [
-            {
-                "title": "Resource Allocation Risk",
-                "description": "Insufficient team resources may delay project milestones",
-                "severity": "high",
-                "status": "open",
-                "mitigation_plan": "Hire additional contractors or reallocate existing resources",
-            },
-            {
-                "title": "Technology Stack Risk",
-                "description": "New framework adoption may lead to learning curve delays",
-                "severity": "medium",
-                "status": "open",
-                "mitigation_plan": "Provide comprehensive training and documentation",
-            },
-            {
-                "title": "Market Competition Risk",
-                "description": "Competitors launching similar features ahead of schedule",
-                "severity": "high",
-                "status": "open",
-                "mitigation_plan": "Accelerate MVP development and early market entry",
-            },
-        ]
-    elif request.request_type == "generate_tasks":
-        mock_data = [
-            {
-                "title": "Set up development environment",
-                "description": "Configure local dev environment with all dependencies",
-                "status": "todo",
-                "priority": "high",
-                "due_date": (datetime.utcnow() + timedelta(days=2)).isoformat(),
-            },
-            {
-                "title": "Design database schema",
-                "description": "Create ERD and define all database tables",
-                "status": "todo",
-                "priority": "high",
-                "due_date": (datetime.utcnow() + timedelta(days=3)).isoformat(),
-            },
-            {
-                "title": "Implement authentication system",
-                "description": "Build JWT-based auth with login/register endpoints",
-                "status": "todo",
-                "priority": "urgent",
-                "due_date": (datetime.utcnow() + timedelta(days=5)).isoformat(),
-            },
-            {
-                "title": "Create UI mockups",
-                "description": "Design wireframes for all main application screens",
-                "status": "todo",
-                "priority": "medium",
-                "due_date": (datetime.utcnow() + timedelta(days=7)).isoformat(),
-            },
-        ]
-    elif request.request_type == "caption":
-        mock_data = [
-            {
-                "type": "fitness_caption",
-                "content": "Transform your body, transform your life! 💪 Every workout is a step closer to your goals. Remember, the only bad workout is the one that didn't happen. Stay consistent, stay motivated, and watch the results follow! #FitnessJourney #NoPainNoGain",
-            }
-        ]
-    elif request.request_type == "hashtag":
-        mock_data = [
-            {
-                "type": "fitness_hashtags",
-                "content": "#FitnessMotivation #GymLife #WorkoutRoutine #HealthyLifestyle #FitFam #TrainHard #FitnessGoals #BodyTransformation #GymMotivation #FitnessAddict #GetFit #FitnessInspiration #WorkoutMotivation #FitLife #GymTime",
-            }
-        ]
-    elif request.request_type == "workout_plan":
-        mock_data = [
-            {
-                "type": "workout_plan",
-                "content": "**Upper Body Strength Workout**\n\nWarm-up (5 mins):\n- Arm circles: 30 seconds\n- Shoulder rolls: 30 seconds\n\nMain Workout:\n1. Push-ups: 3 sets x 12 reps\n2. Dumbbell Rows: 3 sets x 10 reps per arm\n3. Shoulder Press: 3 sets x 12 reps\n4. Bicep Curls: 3 sets x 15 reps\n5. Tricep Dips: 3 sets x 10 reps\n\nCool-down: 5 minutes stretching",
-            }
-        ]
-    else:  # generate_content or other types
-        mock_data = [
-            {
-                "type": "fitness_tip",
-                "content": "💡 **Fitness Tip**: Consistency beats intensity. It's better to work out 3-4 times a week regularly than to go hard for a week and burn out. Build sustainable habits that you can maintain long-term for lasting results.",
-            },
-            {
-                "type": "nutrition_tip",
-                "content": "🥗 **Nutrition Tip**: Protein is essential for muscle recovery and growth. Aim for 1.6-2.2g per kg of body weight daily. Good sources include lean meats, fish, eggs, Greek yogurt, and plant-based options like lentils and tofu.",
-            },
-            {
-                "type": "motivation",
-                "content": "🔥 **Motivation**: Your body can stand almost anything. It's your mind you have to convince. When you feel like quitting, remember why you started. Every rep, every step, every healthy choice is an investment in yourself!",
-            },
-        ]
+    try:
+        # Route to appropriate generation function based on request type
+        if request.request_type == "caption":
+            result = openai_service.generate_fitness_caption(
+                context=request.prompt,
+                tone="motivational",
+                model=model
+            )
+            generated_data = [result]
 
-    # Log AI request to database
-    ai_request = AIRequest(
-        user_id=current_user.id,
-        request_type=request.request_type,
-        prompt=request.prompt,
-        response={"items": mock_data},
-        tokens_used=random.randint(100, 500),  # Mock token count
-    )
-    db.add(ai_request)
-    db.commit()
+        elif request.request_type == "hashtag":
+            result = openai_service.generate_hashtags(
+                caption=request.prompt,
+                niche="fitness",
+                count=15,
+                model=model
+            )
+            generated_data = [result]
 
-    return AIGenerateResponse(
-        success=True,
-        data=mock_data,
-        tokens_used=ai_request.tokens_used,
-        request_type=request.request_type,
-    )
+        elif request.request_type == "workout_plan":
+            result = openai_service.generate_workout_plan(
+                goal=request.prompt,
+                level="intermediate",
+                duration="30 minutes",
+                model=model
+            )
+            generated_data = [result]
+
+        elif request.request_type == "generate_risks":
+            result = openai_service.generate_project_risks(
+                project_description=request.prompt,
+                model=model
+            )
+            # Parse JSON response if possible
+            try:
+                risks = json.loads(result["content"])
+                generated_data = risks
+                tokens_used = result["tokens_used"]
+            except json.JSONDecodeError:
+                # If not valid JSON, return as single item
+                generated_data = [result]
+                tokens_used = result["tokens_used"]
+
+        elif request.request_type == "generate_tasks":
+            result = openai_service.generate_task_breakdown(
+                project_goal=request.prompt,
+                timeframe="2 weeks",
+                model=model
+            )
+            # Parse JSON response if possible
+            try:
+                tasks = json.loads(result["content"])
+                generated_data = tasks
+                tokens_used = result["tokens_used"]
+            except json.JSONDecodeError:
+                # If not valid JSON, return as single item
+                generated_data = [result]
+                tokens_used = result["tokens_used"]
+
+        elif request.request_type == "content":
+            result = openai_service.generate_general_content(
+                request_type=request.request_type,
+                prompt=request.prompt,
+                model=model
+            )
+            generated_data = [result]
+
+        else:
+            # For any other request type, use general content generation
+            result = openai_service.generate_general_content(
+                request_type=request.request_type,
+                prompt=request.prompt,
+                model=model
+            )
+            generated_data = [result]
+
+        # Extract tokens_used (handle both list and single result)
+        if isinstance(generated_data, list) and len(generated_data) > 0:
+            if isinstance(generated_data[0], dict) and "tokens_used" in generated_data[0]:
+                tokens_used = generated_data[0]["tokens_used"]
+            else:
+                tokens_used = result.get("tokens_used", 0)
+        else:
+            tokens_used = result.get("tokens_used", 0)
+
+        # Log AI request to database
+        ai_request = AIRequest(
+            user_id=current_user.id,
+            request_type=request.request_type,
+            prompt=request.prompt,
+            response={"items": generated_data},
+            tokens_used=tokens_used,
+        )
+        db.add(ai_request)
+        db.commit()
+
+        logger.info(f"AI generation successful for user {current_user.id}: {request.request_type}")
+
+        return AIGenerateResponse(
+            success=True,
+            data=generated_data,
+            tokens_used=tokens_used,
+            request_type=request.request_type,
+        )
+
+    except ValueError as e:
+        # OpenAI API key not configured
+        logger.error(f"Configuration error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+
+    except Exception as e:
+        # Handle all other errors
+        logger.error(f"Error generating AI content: {e}")
+
+        # Log failed request to database
+        ai_request = AIRequest(
+            user_id=current_user.id,
+            request_type=request.request_type,
+            prompt=request.prompt,
+            response={"error": str(e)},
+            tokens_used=0,
+        )
+        db.add(ai_request)
+        db.commit()
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate AI content: {str(e)}"
+        )
