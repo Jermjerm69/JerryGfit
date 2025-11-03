@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/lib/react-query";
+import { ToastProvider } from "@/components/providers/toast-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
               defaultTheme="system"
               storageKey="jerryfit-ui-theme"
             >
+              <ToastProvider />
               {children}
             </ThemeProvider>
           </AuthProvider>
