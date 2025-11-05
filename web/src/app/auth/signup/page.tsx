@@ -68,8 +68,9 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignup = () => {
-    // TODO: Implement Google OAuth
-    console.log("Google signup");
+    // Redirect to backend Google OAuth endpoint
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    window.location.href = `${apiUrl}/api/v1/oauth/google/login`;
   };
 
   return (
