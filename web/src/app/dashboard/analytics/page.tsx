@@ -1,9 +1,12 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mockAnalytics } from "@/data/mock-data";
+import { analyticsAPI, tasksAPI } from "@/lib/api";
+import { BurndownChart } from "@/components/analytics/BurndownChart";
+import { TaskDistributionChart } from "@/components/analytics/TaskDistributionChart";
+import { VelocityChart } from "@/components/analytics/VelocityChart";
 import {
   BarChart3,
   TrendingUp,
@@ -13,9 +16,75 @@ import {
   Calendar,
   PieChart,
   Activity,
+  Loader2,
 } from "lucide-react";
 
 export default function AnalyticsPage() {
+  // Fetch analytics data
+  const { data: analytics, isLoading: analyticsLoading, refetch } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: analyticsAPI.getDashboard,
+  });
+
+  // Fetch all tasks for distribution calculation
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks-all'],
+    queryFn: () => tasksAPI.getAll(0, 1000),
+  });
+
+  if (analyticsLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  // Calculate task distribution
+  const taskDistribution = [
+    {
+      name: 'To Do',
+      value: tasks.filter(t => t.status === 'todo').length,
+      color: '#94a3b8',
+    },
+    {
+      name: 'In Progress',
+      value: tasks.filter(t => t.status === 'in_progress').length,
+      color: '#3b82f6',
+    },
+    {
+      name: 'Completed',
+      value: tasks.filter(t => t.status === 'done').length,
+      color: '#22c55e',
+    },
+    {
+      name: 'Blocked',
+      value: tasks.filter(t => t.status === 'blocked').length,
+      color: '#ef4444',
+    },
+  ];
+
+  // Generate velocity data (mock for now - replace with real data)
+  const velocityData = [
+    { week: 'Week 1', tasksCompleted: 5, average: 6.5 },
+    { week: 'Week 2', tasksCompleted: 8, average: 6.5 },
+    { week: 'Week 3', tasksCompleted: 7, average: 6.5 },
+    { week: 'Week 4', tasksCompleted: 6, average: 6.5 },
+    { week: 'Week 5', tasksCompleted: 9, average: 6.5 },
+    { week: 'Week 6', tasksCompleted: 4, average: 6.5 },
+  ];
+
+  // Calculate completion rate
+  const totalTasks = analytics?.totals.total_tasks || 0;
+  const completedTasks = analytics?.totals.completed_tasks || 0;
+  const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
+
+  // Calculate average lead time (mock)
+  const avgLeadTime = 4.2;
+
+  // Calculate risk score
+  const riskScore = analytics?.totals.total_risks || 0;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -29,7 +98,7 @@ export default function AnalyticsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -52,7 +121,11 @@ export default function AnalyticsPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8.3</div>
+            <div className="text-2xl font-bold">
+              {velocityData.length > 0
+                ? (velocityData.reduce((sum, d) => sum + d.tasksCompleted, 0) / velocityData.length).toFixed(1)
+                : 0}
+            </div>
             <p className="text-xs text-muted-foreground">
               tasks per week
             </p>
@@ -69,7 +142,7 @@ export default function AnalyticsPage() {
             <PieChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">87%</div>
+            <div className="text-2xl font-bold">{completionRate}%</div>
             <p className="text-xs text-muted-foreground">
               tasks completed on time
             </p>
@@ -86,7 +159,7 @@ export default function AnalyticsPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.2</div>
+            <div className="text-2xl font-bold">{avgLeadTime}</div>
             <p className="text-xs text-muted-foreground">
               days per task
             </p>
@@ -103,7 +176,7 @@ export default function AnalyticsPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
+            <div className="text-2xl font-bold">{riskScore}</div>
             <p className="text-xs text-muted-foreground">
               total risk points
             </p>
@@ -116,81 +189,18 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Projects Over Time Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Projects Over Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80 flex items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-lg mb-4">
-              <div className="text-center space-y-2">
-                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
-                <h3 className="text-lg font-medium">Chart Placeholder</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Line chart showing active vs completed projects over time
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {mockAnalytics.projectsOverTime.map((data) => (
-                <div key={data.month} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{data.month}</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-blue-600">Active: {data.active}</span>
-                    <span className="text-green-600">Completed: {data.completed}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Burndown Chart */}
+        {analytics?.burndown && (
+          <BurndownChart data={analytics.burndown.data_points || []} />
+        )}
 
-        {/* Task Completion Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Task Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80 flex items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-lg mb-4">
-              <div className="text-center space-y-2">
-                <PieChart className="h-12 w-12 mx-auto text-muted-foreground" />
-                <h3 className="text-lg font-medium">Pie Chart Placeholder</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Distribution of task statuses across all projects
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {mockAnalytics.taskCompletion.map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-sm font-medium">{item.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {item.value}
-                    </span>
-                    <Badge variant="outline">
-                      {Math.round(
-                        (item.value /
-                          mockAnalytics.taskCompletion.reduce(
-                            (sum, i) => sum + i.value,
-                            0
-                          )) *
-                          100
-                      )}
-                      %
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Task Distribution Chart */}
+        <TaskDistributionChart data={taskDistribution} />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-1">
+        {/* Velocity Chart */}
+        <VelocityChart data={velocityData} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -201,7 +211,12 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockAnalytics.riskDistribution.map((risk) => (
+              {[
+                { name: 'Low', value: 5, color: '#22c55e' },
+                { name: 'Medium', value: 8, color: '#eab308' },
+                { name: 'High', value: 4, color: '#f97316' },
+                { name: 'Critical', value: 2, color: '#ef4444' },
+              ].map((risk) => (
                 <div key={risk.name} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -220,7 +235,7 @@ export default function AnalyticsPage() {
                       className="h-full transition-all duration-300"
                       style={{
                         backgroundColor: risk.color,
-                        width: `${(risk.value / 23) * 100}%`,
+                        width: `${(risk.value / 19) * 100}%`,
                       }}
                     />
                   </div>
@@ -233,61 +248,48 @@ export default function AnalyticsPage() {
         {/* Team Performance Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>Team Performance</CardTitle>
+            <CardTitle>Performance Metrics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  name: "John Smith",
-                  tasksCompleted: 24,
-                  performance: 95,
-                  trend: "up",
-                },
-                {
-                  name: "Sarah Johnson",
-                  tasksCompleted: 21,
-                  performance: 88,
-                  trend: "up",
-                },
-                {
-                  name: "Mike Davis",
-                  tasksCompleted: 18,
-                  performance: 82,
-                  trend: "down",
-                },
-                {
-                  name: "Anna Wilson",
-                  tasksCompleted: 19,
-                  performance: 91,
-                  trend: "up",
-                },
-              ].map((member) => (
-                <div
-                  key={member.name}
-                  className="flex items-center justify-between p-3 rounded-lg border"
-                >
-                  <div className="space-y-1">
-                    <div className="font-medium">{member.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {member.tasksCompleted} tasks completed
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="font-medium">{member.performance}%</div>
-                      <div className="text-xs text-muted-foreground">
-                        Performance
-                      </div>
-                    </div>
-                    {member.trend === "up" ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
-                    )}
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="space-y-1">
+                  <div className="font-medium">Task Completion Velocity</div>
+                  <div className="text-sm text-muted-foreground">
+                    Average tasks completed per week
                   </div>
                 </div>
-              ))}
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-green-600">6.5</div>
+                  <div className="text-xs text-muted-foreground">tasks/week</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="space-y-1">
+                  <div className="font-medium">Sprint Success Rate</div>
+                  <div className="text-sm text-muted-foreground">
+                    Percentage of sprints completed on time
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-blue-600">87%</div>
+                  <div className="text-xs text-muted-foreground">success rate</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="space-y-1">
+                  <div className="font-medium">Risk Mitigation Rate</div>
+                  <div className="text-sm text-muted-foreground">
+                    Risks successfully mitigated
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-purple-600">92%</div>
+                  <div className="text-xs text-muted-foreground">mitigated</div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

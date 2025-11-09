@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -16,6 +16,12 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     google_id = Column(String, unique=True, nullable=True, index=True)  # Google OAuth ID
+
+    # Settings fields
+    profile_picture = Column(String, nullable=True)  # Path or URL to profile picture
+    notification_preferences = Column(JSON, nullable=True)  # Notification settings
+    user_preferences = Column(JSON, nullable=True)  # Language, date format, etc.
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
