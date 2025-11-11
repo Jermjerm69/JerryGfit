@@ -1,8 +1,16 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import enum
 
 from app.database import Base
+
+
+class UserRole(str, enum.Enum):
+    USER = "user"
+    COACH = "coach"
+    CREATOR = "creator"
+    ADMIN = "admin"
 
 
 class User(Base):
@@ -16,6 +24,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     google_id = Column(String, unique=True, nullable=True, index=True)  # Google OAuth ID
+    role = Column(String, default="user", nullable=False, index=True)  # User role
 
     # Settings fields
     profile_picture = Column(String, nullable=True)  # Path or URL to profile picture

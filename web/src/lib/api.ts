@@ -70,14 +70,21 @@ export interface User {
   is_superuser: boolean;
   created_at: string;
   updated_at: string;
+  profile_picture?: string | null;
+  notification_preferences?: any;
+  user_preferences?: any;
+  role?: string;
+  google_id?: string | null;
 }
 
 export interface Risk {
   id: number;
   title: string;
   description: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status: 'OPEN' | 'MITIGATED' | 'CLOSED';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  probability: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'mitigated' | 'closed';
   mitigation_plan: string;
   owner_id: number;
   created_at: string;
@@ -87,16 +94,20 @@ export interface Risk {
 export interface RiskCreate {
   title: string;
   description: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status: 'OPEN' | 'MITIGATED' | 'CLOSED';
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  probability?: 'low' | 'medium' | 'high';
+  impact?: 'low' | 'medium' | 'high' | 'critical';
+  status?: 'open' | 'mitigated' | 'closed';
   mitigation_plan: string;
 }
 
 export interface RiskUpdate {
   title?: string;
   description?: string;
-  severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status?: 'OPEN' | 'MITIGATED' | 'CLOSED';
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  probability?: 'low' | 'medium' | 'high';
+  impact?: 'low' | 'medium' | 'high' | 'critical';
+  status?: 'open' | 'mitigated' | 'closed';
   mitigation_plan?: string;
 }
 
@@ -104,8 +115,8 @@ export interface Task {
   id: number;
   title: string;
   description: string;
-  status: 'TODO' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status: 'todo' | 'in_progress' | 'done' | 'blocked';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   due_date: string | null;
   completed: boolean;
   owner_id: number;
@@ -116,16 +127,16 @@ export interface Task {
 export interface TaskCreate {
   title: string;
   description: string;
-  status: 'TODO' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status: 'todo' | 'in_progress' | 'done' | 'blocked';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   due_date?: string | null;
 }
 
 export interface TaskUpdate {
   title?: string;
   description?: string;
-  status?: 'TODO' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED';
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status?: 'todo' | 'in_progress' | 'done' | 'blocked';
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   due_date?: string | null;
   completed?: boolean;
 }
@@ -134,8 +145,12 @@ export interface AnalyticsTotals {
   total_tasks: number;
   completed_tasks: number;
   total_risks: number;
-  high_risks: number;
-  total_ai_requests: number;
+  open_risks: number;
+  ai_requests_count: number;
+  completion_rate: number;
+  velocity: number;
+  average_lead_time: number;
+  risk_score: number;
 }
 
 export interface BurndownDataPoint {
@@ -278,6 +293,145 @@ export const aiAPI = {
 
   generate: async (request: AIGenerateRequest): Promise<AIGenerateResponse> => {
     const response = await api.post<AIGenerateResponse>('/ai/generate', request);
+    return response.data;
+  },
+};
+
+// Project types and API
+export interface Project {
+  id: number;
+  name: string;
+  description: string;
+  status: 'active' | 'completed' | 'on_hold' | 'cancelled';
+  progress: number;
+  due_date: string | null;
+  owner_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectCreate {
+  name: string;
+  description?: string;
+  status?: string;
+  progress?: number;
+  due_date?: string | null;
+}
+
+export interface ProjectUpdate {
+  name?: string;
+  description?: string;
+  status?: string;
+  progress?: number;
+  due_date?: string | null;
+}
+
+export const projectsAPI = {
+  getAll: async (skip = 0, limit = 100): Promise<Project[]> => {
+    const response = await api.get<Project[]>('/projects', {
+      params: { skip, limit },
+    });
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<Project> => {
+    const response = await api.get<Project>(`/projects/${id}`);
+    return response.data;
+  },
+
+  create: async (project: ProjectCreate): Promise<Project> => {
+    const response = await api.post<Project>('/projects', project);
+    return response.data;
+  },
+
+  update: async (id: number, project: ProjectUpdate): Promise<Project> => {
+    const response = await api.put<Project>(`/projects/${id}`, project);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/projects/${id}`);
+  },
+};
+
+// Post types and API
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+  caption: string | null;
+  hashtags: string | null;
+  likes: number;
+  comments: number;
+  shares: number;
+  engagement_rate: number;
+  project_id: number | null;
+  user_id: number;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PostCreate {
+  title: string;
+  content: string;
+  caption?: string;
+  hashtags?: string;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  engagement_rate?: number;
+  project_id?: number | null;
+  published_at?: string | null;
+}
+
+export interface PostUpdate {
+  title?: string;
+  content?: string;
+  caption?: string;
+  hashtags?: string;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  engagement_rate?: number;
+  project_id?: number | null;
+  published_at?: string | null;
+}
+
+export const postsAPI = {
+  getAll: async (skip = 0, limit = 100): Promise<Post[]> => {
+    const response = await api.get<Post[]>('/posts', {
+      params: { skip, limit },
+    });
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<Post> => {
+    const response = await api.get<Post>(`/posts/${id}`);
+    return response.data;
+  },
+
+  create: async (post: PostCreate): Promise<Post> => {
+    const response = await api.post<Post>('/posts', post);
+    return response.data;
+  },
+
+  update: async (id: number, post: PostUpdate): Promise<Post> => {
+    const response = await api.put<Post>(`/posts/${id}`, post);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/posts/${id}`);
+  },
+};
+
+// Auth API additions
+export const authRefreshAPI = {
+  refresh: async (refreshToken: string): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>('/auth/refresh', {
+      refresh_token: refreshToken,
+    });
     return response.data;
   },
 };

@@ -27,6 +27,7 @@ class UserInDB(UserBase):
     id: int
     is_active: bool
     is_superuser: bool
+    role: str = "user"
     profile_picture: Optional[str] = None
     notification_preferences: Optional[Dict[str, Any]] = None
     user_preferences: Optional[Dict[str, Any]] = None
@@ -63,3 +64,7 @@ class UserDataExport(BaseModel):
     projects: list
     posts: list
     ai_requests: list
+
+
+class DeleteAccount(BaseModel):
+    password: str

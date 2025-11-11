@@ -12,7 +12,7 @@ from app.models.risk import Risk
 from app.models.project import Project
 from app.models.post import Post
 from app.models.ai_request import AIRequest
-from app.schemas.user import User as UserSchema, UserUpdate, PasswordChange, UserDataExport
+from app.schemas.user import User as UserSchema, UserUpdate, PasswordChange, UserDataExport, DeleteAccount
 from app.core.security import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
@@ -173,15 +173,17 @@ def export_account_data(
 
 @router.delete("/me")
 def delete_account(
-    password: str,
+    password_data: DeleteAccount,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete user account (requires password confirmation)."""
+    password = password_data.password
+
     # For OAuth users without password, allow deletion
     if current_user.hashed_password:
         # Verify password
-        if not verify_password(password, current_user.hashed_password):
+        if not password or not verify_password(password, current_user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Incorrect password"

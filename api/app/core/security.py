@@ -87,3 +87,47 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+
+# Role-based Access Control
+
+def require_role(allowed_roles: list[str]):
+    """Decorator to require specific roles for endpoint access."""
+    async def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Required roles: {', '.join(allowed_roles)}"
+            )
+        return current_user
+    return role_checker
+
+
+async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency to require admin role."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
+
+
+async def get_coach_or_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency to require coach or admin role."""
+    if current_user.role not in ["coach", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Coach or Admin access required"
+        )
+    return current_user
+
+
+async def get_creator_or_above(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency to require creator, coach, or admin role."""
+    if current_user.role not in ["creator", "coach", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Creator, Coach, or Admin access required"
+        )
+    return current_user

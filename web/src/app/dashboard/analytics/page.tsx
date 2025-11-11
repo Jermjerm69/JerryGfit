@@ -3,10 +3,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { analyticsAPI, tasksAPI } from "@/lib/api";
 import { BurndownChart } from "@/components/analytics/BurndownChart";
 import { TaskDistributionChart } from "@/components/analytics/TaskDistributionChart";
 import { VelocityChart } from "@/components/analytics/VelocityChart";
+import { toast } from "@/components/providers/toast-provider";
 import {
   BarChart3,
   TrendingUp,
@@ -17,6 +24,8 @@ import {
   PieChart,
   Activity,
   Loader2,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default function AnalyticsPage() {
@@ -64,26 +73,81 @@ export default function AnalyticsPage() {
     },
   ];
 
-  // Generate velocity data (mock for now - replace with real data)
-  const velocityData = [
-    { week: 'Week 1', tasksCompleted: 5, average: 6.5 },
-    { week: 'Week 2', tasksCompleted: 8, average: 6.5 },
-    { week: 'Week 3', tasksCompleted: 7, average: 6.5 },
-    { week: 'Week 4', tasksCompleted: 6, average: 6.5 },
-    { week: 'Week 5', tasksCompleted: 9, average: 6.5 },
-    { week: 'Week 6', tasksCompleted: 4, average: 6.5 },
-  ];
+  // Use velocity data from backend
+  const velocityData = analytics?.velocity_data || [];
 
-  // Calculate completion rate
+  // Get metrics from backend
   const totalTasks = analytics?.totals.total_tasks || 0;
   const completedTasks = analytics?.totals.completed_tasks || 0;
-  const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
+  const completionRate = analytics?.totals.completion_rate || 0;
+  const velocity = analytics?.totals.velocity || 0;
+  const avgLeadTime = analytics?.totals.average_lead_time || 0;
+  const riskScore = analytics?.totals.risk_score || 0;
 
-  // Calculate average lead time (mock)
-  const avgLeadTime = 4.2;
+  // Use real risk distribution from backend
+  const riskDistributionData = analytics?.risk_distribution ? [
+    { name: 'Low', value: analytics.risk_distribution.low, color: '#22c55e' },
+    { name: 'Medium', value: analytics.risk_distribution.medium, color: '#eab308' },
+    { name: 'High', value: analytics.risk_distribution.high, color: '#f97316' },
+    { name: 'Critical', value: analytics.risk_distribution.critical, color: '#ef4444' },
+  ] : [];
 
-  // Calculate risk score
-  const riskScore = analytics?.totals.total_risks || 0;
+  const totalRisks = riskDistributionData.reduce((sum, risk) => sum + risk.value, 0);
+
+  // Export functions
+  const handleExportPDF = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/analytics/export/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to export PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics_report_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF report downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to export PDF report');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/analytics/export/excel`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to export Excel');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Excel report downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to export Excel report');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -106,10 +170,24 @@ export default function AnalyticsPage() {
             <Calendar className="h-4 w-4 mr-2" />
             Date Range
           </Button>
-          <Button size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPDF}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Export as Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -121,11 +199,7 @@ export default function AnalyticsPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {velocityData.length > 0
-                ? (velocityData.reduce((sum, d) => sum + d.tasksCompleted, 0) / velocityData.length).toFixed(1)
-                : 0}
-            </div>
+            <div className="text-2xl font-bold">{velocity.toFixed(1)}</div>
             <p className="text-xs text-muted-foreground">
               tasks per week
             </p>
@@ -211,12 +285,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { name: 'Low', value: 5, color: '#22c55e' },
-                { name: 'Medium', value: 8, color: '#eab308' },
-                { name: 'High', value: 4, color: '#f97316' },
-                { name: 'Critical', value: 2, color: '#ef4444' },
-              ].map((risk) => (
+              {riskDistributionData.map((risk) => (
                 <div key={risk.name} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -235,7 +304,7 @@ export default function AnalyticsPage() {
                       className="h-full transition-all duration-300"
                       style={{
                         backgroundColor: risk.color,
-                        width: `${(risk.value / 19) * 100}%`,
+                        width: totalRisks > 0 ? `${(risk.value / totalRisks) * 100}%` : '0%',
                       }}
                     />
                   </div>
@@ -260,7 +329,7 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600">6.5</div>
+                  <div className="text-2xl font-bold text-green-600">{velocity.toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">tasks/week</div>
                 </div>
               </div>

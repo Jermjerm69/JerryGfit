@@ -49,8 +49,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md glass border-0 bg-white/90 dark:bg-slate-800/90 shadow-2xl shadow-blue-500/10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4" suppressHydrationWarning>
+      <Card className="w-full max-w-md glass border-0 bg-white/90 dark:bg-slate-800/90 shadow-2xl shadow-blue-500/10" suppressHydrationWarning>
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
@@ -64,15 +64,15 @@ export default function LoginPage() {
             Sign in to your account to continue your fitness journey
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+        <CardContent suppressHydrationWarning>
+          <form onSubmit={handleLogin} className="space-y-4" suppressHydrationWarning>
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/10 dark:text-red-400 rounded-md border border-red-200 dark:border-red-800">
                 {error}
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="email" suppressHydrationWarning>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -81,10 +81,11 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="password" suppressHydrationWarning>Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -93,6 +94,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

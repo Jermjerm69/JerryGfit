@@ -74,8 +74,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md glass border-0 bg-white/90 dark:bg-slate-800/90 shadow-2xl shadow-blue-500/10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4" suppressHydrationWarning>
+      <Card className="w-full max-w-md glass border-0 bg-white/90 dark:bg-slate-800/90 shadow-2xl shadow-blue-500/10" suppressHydrationWarning>
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
@@ -89,15 +89,15 @@ export default function SignupPage() {
             Join JerryGFit to start your fitness journey
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignup} className="space-y-4">
+        <CardContent suppressHydrationWarning>
+          <form onSubmit={handleSignup} className="space-y-4" suppressHydrationWarning>
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/10 dark:text-red-400 rounded-md border border-red-200 dark:border-red-800">
                 {error}
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="name" suppressHydrationWarning>Full Name</Label>
               <Input
                 id="name"
                 name="name"
@@ -107,10 +107,11 @@ export default function SignupPage() {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="username" suppressHydrationWarning>Username</Label>
               <Input
                 id="username"
                 name="username"
@@ -120,10 +121,11 @@ export default function SignupPage() {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="email" suppressHydrationWarning>Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -133,10 +135,11 @@ export default function SignupPage() {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="password" suppressHydrationWarning>Password</Label>
               <Input
                 id="password"
                 name="password"
@@ -146,10 +149,11 @@ export default function SignupPage() {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="confirmPassword" suppressHydrationWarning>Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -159,6 +163,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 disabled={isLoading}
                 required
+                suppressHydrationWarning
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

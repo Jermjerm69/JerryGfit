@@ -25,3 +25,8 @@
 2025-11-09 10:57:53,484 - app.routers.ai - INFO - AI generation successful for user 1: workout_plan
 2025-11-09 10:58:37,814 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 2025-11-09 10:58:37,836 - app.routers.ai - INFO - AI generation successful for user 1: workout_plan
+2025-11-11 15:34:59,876 - httpx - INFO - HTTP Request: GET https://accounts.google.com/.well-known/openid-configuration "HTTP/1.1 200 OK"
+2025-11-11 15:35:05,135 - httpx - INFO - HTTP Request: POST https://oauth2.googleapis.com/token "HTTP/1.1 200 OK"
+2025-11-11 15:35:05,263 - httpx - INFO - HTTP Request: GET https://www.googleapis.com/oauth2/v3/certs "HTTP/1.1 200 OK"
+2025-11-11 15:44:54,607 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-11 15:44:54,643 - app.routers.ai - INFO - AI generation successful for user 1: caption

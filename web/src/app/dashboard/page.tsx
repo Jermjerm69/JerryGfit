@@ -1,9 +1,10 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { mockKPIData, mockProjects, mockTasks } from "@/data/mock-data";
+import { analyticsAPI, tasksAPI, projectsAPI } from "@/lib/api";
 import {
   FolderOpen,
   CheckCircle,
@@ -11,11 +12,38 @@ import {
   Users,
   TrendingUp,
   Clock,
+  Loader2,
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const recentTasks = mockTasks.slice(0, 5);
-  const activeProjects = mockProjects.filter((p) => p.status === "active");
+  // Fetch analytics data
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: analyticsAPI.getDashboard,
+  });
+
+  // Fetch recent tasks
+  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: () => tasksAPI.getAll(0, 5),
+  });
+
+  // Fetch real projects from API
+  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => projectsAPI.getAll(0, 10),
+  });
+
+  const recentTasks = tasks.slice(0, 5);
+  const activeProjects = projects.filter((p) => p.status === "active");
+
+  if (analyticsLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -28,30 +56,30 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Total Projects"
-          value={mockKPIData.totalProjects}
-          description="Active and completed projects"
+          title="Total Tasks"
+          value={analytics?.totals.total_tasks || 0}
+          description="All tasks in the system"
           icon={FolderOpen}
           trend={{ value: 12, isPositive: true }}
         />
         <KPICard
           title="Completed Tasks"
-          value={mockKPIData.completedTasks}
-          description="Tasks finished this month"
+          value={analytics?.totals.completed_tasks || 0}
+          description="Tasks finished"
           icon={CheckCircle}
           trend={{ value: 8, isPositive: true }}
         />
         <KPICard
           title="High Risk Items"
-          value={mockKPIData.highRisks}
+          value={analytics?.totals.high_risks || 0}
           description="Requires immediate attention"
           icon={AlertTriangle}
-          trend={{ value: -15, isPositive: false }}
+          trend={{ value: analytics?.totals.high_risks ? -15 : 0, isPositive: false }}
         />
         <KPICard
-          title="Active Users"
-          value={mockKPIData.activeUsers}
-          description={`of ${mockKPIData.totalUsers} total users`}
+          title="Total Risks"
+          value={analytics?.totals.total_risks || 0}
+          description="All risks in the system"
           icon={Users}
           trend={{ value: 5, isPositive: true }}
         />
@@ -92,40 +120,54 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentTasks.map((task) => (
-              <div key={task.id} className="flex items-center gap-3">
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    task.status === "done"
-                      ? "bg-green-500"
-                      : task.status === "in-progress"
-                      ? "bg-yellow-500"
-                      : "bg-gray-500"
-                  }`}
-                />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {task.title}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{task.assignee}</span>
-                    <span>•</span>
-                    <span>{task.dueDate}</span>
-                  </div>
-                </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                    task.priority === "high"
-                      ? "bg-red-100 text-red-800"
-                      : task.priority === "medium"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-green-100 text-green-800"
-                  }`}
-                >
-                  {task.priority}
-                </span>
+            {tasksLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ))}
+            ) : recentTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No tasks yet. Create your first task to get started!
+              </p>
+            ) : (
+              recentTasks.map((task) => (
+                <div key={task.id} className="flex items-center gap-3">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      task.status === "DONE"
+                        ? "bg-green-500"
+                        : task.status === "IN_PROGRESS"
+                        ? "bg-yellow-500"
+                        : "bg-gray-500"
+                    }`}
+                  />
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {task.title}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {task.due_date && (
+                        <>
+                          <span>{new Date(task.due_date).toLocaleDateString()}</span>
+                          <span>•</span>
+                        </>
+                      )}
+                      <span className="capitalize">{task.status.toLowerCase().replace('_', ' ')}</span>
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                      task.priority === "HIGH" || task.priority === "URGENT"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        : task.priority === "MEDIUM"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                        : "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                    }`}
+                  >
+                    {task.priority.toLowerCase()}
+                  </span>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

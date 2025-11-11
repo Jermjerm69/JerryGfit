@@ -29,12 +29,30 @@ import {
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+
+  // Show loading state while user data is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    router.push('/auth/login');
+    return null;
+  }
 
   const [profile, setProfile] = useState({
     full_name: user?.full_name || "",
@@ -59,7 +77,10 @@ export default function SettingsPage() {
         email: user.email || "",
         username: user.username || "",
       });
-      setProfilePictureUrl(user.profile_picture || null);
+      // Construct full URL for profile picture
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const baseUrl = apiUrl.replace('/api/v1', '');
+      setProfilePictureUrl(user.profile_picture ? `${baseUrl}/${user.profile_picture}` : null);
       if (user.notification_preferences) {
         setNotifications(user.notification_preferences);
       }
@@ -124,7 +145,10 @@ export default function SettingsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
-      setProfilePictureUrl(data.file_path);
+      // Construct full URL for profile picture
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const baseUrl = apiUrl.replace('/api/v1', '');
+      setProfilePictureUrl(data.file_path ? `${baseUrl}/${data.file_path}` : null);
       toast.success("Profile picture uploaded successfully!");
     },
     onError: (error: any) => {
@@ -257,25 +281,25 @@ export default function SettingsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile">
+          <TabsTrigger value="profile" isActive={activeTab === "profile"} onClick={() => setActiveTab("profile")}>
             <User className="h-4 w-4 mr-2" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="notifications">
+          <TabsTrigger value="notifications" isActive={activeTab === "notifications"} onClick={() => setActiveTab("notifications")}>
             <Bell className="h-4 w-4 mr-2" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="appearance">
+          <TabsTrigger value="appearance" isActive={activeTab === "appearance"} onClick={() => setActiveTab("appearance")}>
             <Palette className="h-4 w-4 mr-2" />
             Appearance
           </TabsTrigger>
-          <TabsTrigger value="security">
+          <TabsTrigger value="security" isActive={activeTab === "security"} onClick={() => setActiveTab("security")}>
             <Shield className="h-4 w-4 mr-2" />
             Security
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
+        <TabsContent value="profile" activeValue={activeTab}>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="md:col-span-2">
               <Card>
@@ -389,7 +413,7 @@ export default function SettingsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="notifications">
+        <TabsContent value="notifications" activeValue={activeTab}>
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
@@ -487,7 +511,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="appearance">
+        <TabsContent value="appearance" activeValue={activeTab}>
           <Card>
             <CardHeader>
               <CardTitle>Appearance Settings</CardTitle>
@@ -541,7 +565,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="security">
+        <TabsContent value="security" activeValue={activeTab}>
           <div className="space-y-6">
             <Card>
               <CardHeader>
