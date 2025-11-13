@@ -37,6 +37,9 @@ export default function DashboardPage() {
   const recentTasks = tasks.slice(0, 5);
   const activeProjects = projects.filter((p) => p.status === "active");
 
+  // Calculate high risks from risk_distribution
+  const highRisks = (analytics?.risk_distribution?.high || 0) + (analytics?.risk_distribution?.critical || 0);
+
   if (analyticsLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -71,10 +74,10 @@ export default function DashboardPage() {
         />
         <KPICard
           title="High Risk Items"
-          value={analytics?.totals.high_risks || 0}
+          value={highRisks}
           description="Requires immediate attention"
           icon={AlertTriangle}
-          trend={{ value: analytics?.totals.high_risks ? -15 : 0, isPositive: false }}
+          trend={{ value: highRisks ? -15 : 0, isPositive: false }}
         />
         <KPICard
           title="Total Risks"
@@ -94,21 +97,34 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {activeProjects.map((project) => (
-              <div key={project.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">{project.name}</h4>
-                  <span className="text-sm text-muted-foreground">
-                    {project.progress}%
-                  </span>
+            {activeProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No active projects. Create your first project to get started!
+              </p>
+            ) : (
+              activeProjects.map((project) => (
+                <div key={project.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">{project.name}</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {project.progress}%
+                    </span>
+                  </div>
+                  <Progress value={project.progress} />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {project.due_date
+                        ? `Due: ${new Date(project.due_date).toLocaleDateString()}`
+                        : 'No due date'
+                      }
+                    </span>
+                    <span className="text-xs text-muted-foreground capitalize">
+                      {project.status}
+                    </span>
+                  </div>
                 </div>
-                <Progress value={project.progress} />
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Due: {project.dueDate}</span>
-                  <span>{project.team.length} members</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -133,9 +149,9 @@ export default function DashboardPage() {
                 <div key={task.id} className="flex items-center gap-3">
                   <div
                     className={`h-2 w-2 rounded-full ${
-                      task.status === "DONE"
+                      task.status === "done"
                         ? "bg-green-500"
-                        : task.status === "IN_PROGRESS"
+                        : task.status === "in_progress"
                         ? "bg-yellow-500"
                         : "bg-gray-500"
                     }`}
