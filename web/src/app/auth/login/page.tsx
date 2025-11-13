@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ import {
 import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -25,6 +26,11 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const router = useRouter();
+
+  // Prevent hydration errors from browser extensions
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,9 +54,18 @@ export default function LoginPage() {
     window.location.href = `${apiUrl}/oauth/google/login`;
   };
 
+  // Don't render form until mounted to prevent hydration errors from browser extensions
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4" suppressHydrationWarning>
-      <Card className="w-full max-w-md glass border-0 bg-white/90 dark:bg-slate-800/90 shadow-2xl shadow-blue-500/10" suppressHydrationWarning>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900 p-4">
+      <Card className="w-full max-w-md glass border-0 bg-white/90 dark:bg-slate-800/90 shadow-2xl shadow-blue-500/10">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
@@ -64,15 +79,15 @@ export default function LoginPage() {
             Sign in to your account to continue your fitness journey
           </CardDescription>
         </CardHeader>
-        <CardContent suppressHydrationWarning>
-          <form onSubmit={handleLogin} className="space-y-4" suppressHydrationWarning>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/10 dark:text-red-400 rounded-md border border-red-200 dark:border-red-800">
                 {error}
               </div>
             )}
-            <div className="space-y-2" suppressHydrationWarning>
-              <Label htmlFor="email" suppressHydrationWarning>Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -81,11 +96,11 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
-                suppressHydrationWarning
+               
               />
             </div>
-            <div className="space-y-2" suppressHydrationWarning>
-              <Label htmlFor="password" suppressHydrationWarning>Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -94,7 +109,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                suppressHydrationWarning
+               
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

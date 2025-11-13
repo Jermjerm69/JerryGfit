@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -45,6 +46,11 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <div className="flex h-full w-64 flex-col bg-card/50 backdrop-blur-sm border-r border-border/50 dark:bg-card/30">
@@ -60,15 +66,15 @@ export function Sidebar() {
         <ThemeToggle />
       </div>
 
-      {/* Coach Image Section */}
+      {/* User Profile Section */}
       <div className="p-4 mx-4 mt-4 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-border/50">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
-            🏋️
+            {user?.full_name ? user.full_name.charAt(0).toUpperCase() : '👤'}
           </div>
-          <div>
-            <p className="text-sm font-medium">JerryGFit AI Coach</p>
-            <p className="text-xs text-muted-foreground">Ready to help!</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.full_name || 'Loading...'}</p>
+            <p className="text-xs text-muted-foreground truncate capitalize">{user?.role || 'user'}</p>
           </div>
         </div>
       </div>
@@ -94,17 +100,15 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-border/50 p-4">
-        <div className="flex items-center gap-3 rounded-lg px-3 py-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-            <User className="h-4 w-4" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">Jerry Coach</p>
-            <p className="text-xs text-muted-foreground">coach@jerryfit.com</p>
-          </div>
+      <div className="border-t border-border/50 p-4 space-y-2">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30">
+          <User className="h-4 w-4 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground truncate flex-1">{user?.email || "user@jerryfit.com"}</p>
         </div>
-        <button className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent/80 hover:text-accent-foreground transition-colors">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-gradient-to-r from-red-500/10 to-pink-500/10 text-red-600 dark:text-red-400 hover:from-red-500/20 hover:to-pink-500/20 transition-all duration-200 hover:scale-[1.02] border border-red-500/20"
+        >
           <LogOut className="h-4 w-4" />
           Sign out
         </button>
@@ -112,3 +116,4 @@ export function Sidebar() {
     </div>
   );
 }
+    
