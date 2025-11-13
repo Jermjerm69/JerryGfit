@@ -159,9 +159,28 @@ export interface BurndownDataPoint {
   completed_tasks: number;
 }
 
+export interface BurndownChart {
+  data_points: BurndownDataPoint[];
+}
+
+export interface RiskDistribution {
+  low: number;
+  medium: number;
+  high: number;
+  critical: number;
+}
+
+export interface VelocityDataPoint {
+  week: string;
+  tasks_completed: number;
+  average: number;
+}
+
 export interface AnalyticsResponse {
   totals: AnalyticsTotals;
-  burndown: BurndownDataPoint[];
+  burndown: BurndownChart;
+  risk_distribution: RiskDistribution;
+  velocity_data: VelocityDataPoint[];
 }
 
 // API service functions
