@@ -46,3 +46,13 @@ Traceback (most recent call last):
   File "C:\Users\jaygo\JerryGfit\api\venv\lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
     version = _bcrypt.__about__.__version__
 AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-11-13 15:43:10,390 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\jaygo\JerryGfit\api\venv\lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-11-13 15:45:21,177 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 15:45:21,205 - app.routers.ai - INFO - AI generation successful for user 4: workout_plan
+2025-11-13 15:45:33,690 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 15:45:33,720 - app.routers.ai - INFO - AI generation successful for user 4: workout_plan
+2025-11-13 15:50:14,729 - httpx - INFO - HTTP Request: GET https://accounts.google.com/.well-known/openid-configuration "HTTP/1.1 200 OK"
