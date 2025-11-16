@@ -10,6 +10,8 @@ from app.core.security import (
     verify_password,
     get_password_hash,
     create_access_token,
+    create_refresh_token,
+    decode_access_token,
     get_current_user,
 )
 from app.core.config import settings
@@ -71,13 +73,22 @@ def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
         )
 
-    # Create access token
+    # Create access and refresh tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token = create_refresh_token(
+        data={"sub": str(user.id)}, expires_delta=refresh_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 
 @router.post("/verify")
@@ -93,4 +104,44 @@ async def verify_token(
             "username": current_user.username,
             "full_name": current_user.full_name,
         },
+    }
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(
+    refresh_token: str,
+    db: Session = Depends(get_db)
+):
+    """Refresh access token using a refresh token."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    # Decode refresh token
+    payload = decode_access_token(refresh_token)
+    if payload is None or payload.get("type") != "refresh":
+        raise credentials_exception
+
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        raise credentials_exception
+
+    # Verify user still exists
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None or not user.is_active:
+        raise credentials_exception
+
+    # Create new access token
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    new_access_token = create_access_token(
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
+    )
+
+    # Return same refresh token with new access token
+    return {
+        "access_token": new_access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
     }
