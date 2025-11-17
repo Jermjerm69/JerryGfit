@@ -284,7 +284,7 @@ export interface AIRequest {
   user_id: number;
   request_type: string;
   prompt: string;
-  response: unknown;
+  response: {content?:string} | Record<string,unknown>;
   tokens_used: number;
   created_at: string;
 }
@@ -297,7 +297,7 @@ export interface AIGenerateRequest {
 
 export interface AIGenerateResponse {
   success: boolean;
-  data: unknown;
+  data: Array<{content?:string}> | Record<string, unknown>;
   tokens_used: number;
   request_type: string;
 }
