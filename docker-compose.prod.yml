@@ -29,7 +29,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ./backend
+      context: ./api
       dockerfile: Dockerfile
     container_name: jerrygfit-backend
     restart: unless-stopped
@@ -63,7 +63,7 @@ services:
   # Frontend App
   frontend:
     build:
-      context: ./frontend
+      context: ./web     
       dockerfile: Dockerfile
     container_name: jerrygfit-frontend
     restart: unless-stopped
