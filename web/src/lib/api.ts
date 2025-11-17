@@ -71,8 +71,8 @@ export interface User {
   created_at: string;
   updated_at: string;
   profile_picture?: string | null;
-  notification_preferences?: any;
-  user_preferences?: any;
+  notification_preferences?: Record<string, unknown>;
+  user_preferences?: Record<string, unknown>;
   role?: string;
   google_id?: string | null;
 }
@@ -284,7 +284,7 @@ export interface AIRequest {
   user_id: number;
   request_type: string;
   prompt: string;
-  response: any;
+  response: unknown;
   tokens_used: number;
   created_at: string;
 }
@@ -297,7 +297,7 @@ export interface AIGenerateRequest {
 
 export interface AIGenerateResponse {
   success: boolean;
-  data: any;
+  data: unknown;
   tokens_used: number;
   request_type: string;
 }

@@ -36,24 +36,6 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
 
-  // Show loading state while user data is being fetched
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading settings...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated
-  if (!user) {
-    router.push('/auth/login');
-    return null;
-  }
-
   const [profile, setProfile] = useState({
     full_name: user?.full_name || "",
     email: user?.email || "",
@@ -68,6 +50,20 @@ export default function SettingsPage() {
 
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const [notifications, setNotifications] = useState({
+    emailNotifications: true,
+    pushNotifications: false,
+    taskReminders: true,
+    weeklyReports: true,
+    riskAlerts: true,
+  });
+
+  const [preferences, setPreferences] = useState({
+    language: "english",
+    dateFormat: "MM/DD/YYYY",
+    timeFormat: "12-hour",
+  });
 
   // Update profile state when user data loads
   useEffect(() => {
@@ -90,20 +86,6 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    taskReminders: true,
-    weeklyReports: true,
-    riskAlerts: true,
-  });
-
-  const [preferences, setPreferences] = useState({
-    language: "english",
-    dateFormat: "MM/DD/YYYY",
-    timeFormat: "12-hour",
-  });
-
   const handleProfileChange = (field: string, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
   };
@@ -118,7 +100,7 @@ export default function SettingsPage() {
 
   // Mutation for updating user profile
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Record<string, unknown>) => {
       const response = await api.put('/users/me', data);
       return response.data;
     },
@@ -128,7 +110,7 @@ export default function SettingsPage() {
       toast.success("Profile updated successfully!");
       setTimeout(() => setSaveSuccess(false), 3000);
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || "Failed to update profile");
     },
   });
@@ -143,7 +125,7 @@ export default function SettingsPage() {
       });
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: { file_path?: string }) => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
       // Construct full URL for profile picture
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -151,7 +133,7 @@ export default function SettingsPage() {
       setProfilePictureUrl(data.file_path ? `${baseUrl}/${data.file_path}` : null);
       toast.success("Profile picture uploaded successfully!");
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || "Failed to upload photo");
     },
   });
@@ -166,7 +148,7 @@ export default function SettingsPage() {
       toast.success("Password changed successfully!");
       setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || "Failed to change password");
     },
   });
@@ -177,7 +159,7 @@ export default function SettingsPage() {
       const response = await api.get('/users/me/export');
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: Record<string, unknown>) => {
       // Download as JSON file
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
@@ -190,7 +172,7 @@ export default function SettingsPage() {
       document.body.removeChild(a);
       toast.success("Account data exported successfully!");
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || "Failed to export data");
     },
   });
@@ -206,7 +188,7 @@ export default function SettingsPage() {
       logout();
       router.push('/auth/login');
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || "Failed to delete account");
     },
   });
@@ -266,6 +248,24 @@ export default function SettingsPage() {
     }
     deleteAccountMutation.mutate(deletePassword);
   };
+
+  // Show loading state while user data is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    router.push('/auth/login');
+    return null;
+  }
 
   return (
     <div className="space-y-6">

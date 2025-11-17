@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Verify token and get user data
           const userData = await authAPI.getCurrentUser();
           setUser(userData);
-        } catch (error) {
+        } catch {
           // Token is invalid or expired
           localStorage.removeItem('access_token');
           localStorage.removeItem('user');
@@ -54,15 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await authAPI.getCurrentUser();
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error('Login error:', error);
-      throw new Error(error.response?.data?.detail || 'Login failed. Please check your credentials.');
+      throw new Error(err.response?.data?.detail || 'Login failed. Please check your credentials.');
     }
   };
 
   const register = async (email: string, username: string, password: string, fullName: string) => {
     try {
-      const userData = await authAPI.register({
+      await authAPI.register({
         email,
         username,
         password,
@@ -71,9 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // After registration, log the user in
       await login(email, password);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
       console.error('Registration error:', error);
-      throw new Error(error.response?.data?.detail || 'Registration failed. Please try again.');
+      throw new Error(err.response?.data?.detail || 'Registration failed. Please try again.');
     }
   };
 

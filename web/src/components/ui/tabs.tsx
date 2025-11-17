@@ -7,7 +7,7 @@ interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
-  ({ className, value, onValueChange, ...props }, ref) => {
+  ({ className, ...props }, ref) => {
     return (
       <div ref={ref} className={cn(className)} {...props} />
     );
@@ -15,7 +15,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
 );
 Tabs.displayName = "Tabs";
 
-interface TabsListProps extends React.HTMLAttributes<HTMLDivElement> {}
+type TabsListProps = React.HTMLAttributes<HTMLDivElement>;
 
 const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
   ({ className, ...props }, ref) => {

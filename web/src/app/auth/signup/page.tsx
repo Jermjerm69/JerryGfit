@@ -66,8 +66,9 @@ export default function SignupPage() {
       await register(formData.email, formData.username, formData.password, formData.name);
       // Redirect to dashboard on successful registration
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

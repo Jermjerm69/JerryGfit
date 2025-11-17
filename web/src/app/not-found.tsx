@@ -9,7 +9,7 @@ export default function NotFound() {
         <FileQuestion className="h-24 w-24 mx-auto text-muted-foreground" />
         <h1 className="text-4xl font-bold">404 - Page Not Found</h1>
         <p className="text-lg text-muted-foreground max-w-md mx-auto">
-          The page you're looking for doesn't exist. It might have been moved or deleted.
+          The page you&apos;re looking for doesn&apos;t exist. It might have been moved or deleted.
         </p>
         <div className="flex gap-4 justify-center">
           <Button asChild>

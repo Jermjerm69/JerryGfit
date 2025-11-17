@@ -77,8 +77,6 @@ export default function AnalyticsPage() {
   const velocityData = analytics?.velocity_data || [];
 
   // Get metrics from backend
-  const totalTasks = analytics?.totals.total_tasks || 0;
-  const completedTasks = analytics?.totals.completed_tasks || 0;
   const completionRate = analytics?.totals.completion_rate || 0;
   const velocity = analytics?.totals.velocity || 0;
   const avgLeadTime = analytics?.totals.average_lead_time || 0;
@@ -117,7 +115,7 @@ export default function AnalyticsPage() {
       window.URL.revokeObjectURL(url);
 
       toast.success('PDF report downloaded successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to export PDF report');
     }
   };
@@ -144,7 +142,7 @@ export default function AnalyticsPage() {
       window.URL.revokeObjectURL(url);
 
       toast.success('Excel report downloaded successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to export Excel report');
     }
   };

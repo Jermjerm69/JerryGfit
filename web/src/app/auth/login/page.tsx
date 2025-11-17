@@ -41,8 +41,9 @@ export default function LoginPage() {
       await login(email, password);
       // Redirect to dashboard on successful login
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +165,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/auth/signup"
               className="text-primary font-medium hover:underline"

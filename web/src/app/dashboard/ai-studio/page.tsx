@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Wand2, Copy, Download, RotateCcw, Loader2 } from "lucide-react";
 import { aiAPI } from "@/lib/api";
+import { toast } from "@/components/providers/toast-provider";
 
 const AI_MODELS = [
   { value: "gpt-4", label: "GPT-4" },
@@ -83,7 +84,7 @@ export default function AIStudioPage() {
       // Format the generated content nicely
       let formattedContent = "";
       if (Array.isArray(data.data)) {
-        formattedContent = data.data.map((item: any) => item.content || JSON.stringify(item)).join("\n\n");
+        formattedContent = data.data.map((item: { content?: string }) => item.content || JSON.stringify(item)).join("\n\n");
       } else {
         formattedContent = JSON.stringify(data.data, null, 2);
       }
@@ -98,6 +99,11 @@ export default function AIStudioPage() {
 
       // Refresh AI history
       queryClient.invalidateQueries({ queryKey: ['ai-history'] });
+
+      toast.success('Content generated successfully!');
+    },
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
+      toast.error(error.response?.data?.detail || 'Failed to generate content');
     },
   });
 
@@ -118,7 +124,7 @@ export default function AIStudioPage() {
 
   const handleCopy = (content: string) => {
     navigator.clipboard.writeText(content);
-    // TODO: Add toast notification
+    toast.success('Copied to clipboard!');
   };
 
   const handleExport = () => {

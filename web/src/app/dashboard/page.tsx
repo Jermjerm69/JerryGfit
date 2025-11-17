@@ -29,7 +29,7 @@ export default function DashboardPage() {
   });
 
   // Fetch real projects from API
-  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+  const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
     queryFn: () => projectsAPI.getAll(0, 10),
   });
@@ -53,7 +53,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back! Here's what's happening with your projects.
+          Welcome back! Here&apos;s what&apos;s happening with your projects.
         </p>
       </div>
 

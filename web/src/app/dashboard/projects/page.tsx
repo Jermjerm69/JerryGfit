@@ -69,7 +69,7 @@ export default function ProjectsPage() {
   });
 
   const updateRiskMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => risksAPI.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => risksAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risks'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
@@ -97,7 +97,7 @@ export default function ProjectsPage() {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => tasksAPI.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => tasksAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
@@ -230,7 +230,7 @@ export default function ProjectsPage() {
               ) : risks.length === 0 ? (
                 <div className="text-center py-12">
                   <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No risks yet. Click "Add New" to create your first risk.</p>
+                  <p className="text-muted-foreground">No risks yet. Click &quot;Add New&quot; to create your first risk.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -499,7 +499,7 @@ function RiskDialog({
                 <Label htmlFor="severity">Severity</Label>
                 <Select
                   value={formData.severity}
-                  onValueChange={(value: any) => setFormData({ ...formData, severity: value })}
+                  onValueChange={(value) => setFormData({ ...formData, severity: value as "low" | "medium" | "high" | "critical" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -516,7 +516,7 @@ function RiskDialog({
                 <Label htmlFor="probability">Probability</Label>
                 <Select
                   value={formData.probability}
-                  onValueChange={(value: any) => setFormData({ ...formData, probability: value })}
+                  onValueChange={(value) => setFormData({ ...formData, probability: value as "low" | "medium" | "high" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -534,7 +534,7 @@ function RiskDialog({
                 <Label htmlFor="impact">Impact</Label>
                 <Select
                   value={formData.impact}
-                  onValueChange={(value: any) => setFormData({ ...formData, impact: value })}
+                  onValueChange={(value) => setFormData({ ...formData, impact: value as "low" | "medium" | "high" | "critical" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -551,7 +551,7 @@ function RiskDialog({
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                  onValueChange={(value) => setFormData({ ...formData, status: value as "open" | "mitigated" | "closed" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -677,7 +677,7 @@ function TaskDialog({
                 <Label htmlFor="task-status">Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                  onValueChange={(value) => setFormData({ ...formData, status: value as "todo" | "in_progress" | "done" | "blocked" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -694,7 +694,7 @@ function TaskDialog({
                 <Label htmlFor="task-priority">Priority</Label>
                 <Select
                   value={formData.priority}
-                  onValueChange={(value: any) => setFormData({ ...formData, priority: value })}
+                  onValueChange={(value) => setFormData({ ...formData, priority: value as "low" | "medium" | "high" | "urgent" })}
                 >
                   <SelectTrigger>
                     <SelectValue />

@@ -83,7 +83,7 @@ export default function RisksPage() {
       setFormData(initialFormData);
       toast.success('Risk created successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || 'Failed to create risk');
     },
   });
@@ -100,7 +100,7 @@ export default function RisksPage() {
       setFormData(initialFormData);
       toast.success('Risk updated successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || 'Failed to update risk');
     },
   });
@@ -113,7 +113,7 @@ export default function RisksPage() {
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
       toast.success('Risk deleted successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { detail?: string } } }) => {
       toast.error(error.response?.data?.detail || 'Failed to delete risk');
     },
   });
@@ -465,7 +465,7 @@ export default function RisksPage() {
                 <Label htmlFor="severity">Severity *</Label>
                 <Select
                   value={formData.severity}
-                  onValueChange={(value: any) => setFormData({ ...formData, severity: value })}
+                  onValueChange={(value) => setFormData({ ...formData, severity: value as "low" | "medium" | "high" | "critical" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -483,7 +483,7 @@ export default function RisksPage() {
                 <Label htmlFor="status">Status *</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                  onValueChange={(value) => setFormData({ ...formData, status: value as "open" | "mitigated" | "closed" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -502,7 +502,7 @@ export default function RisksPage() {
                 <Label htmlFor="probability">Probability *</Label>
                 <Select
                   value={formData.probability}
-                  onValueChange={(value: any) => setFormData({ ...formData, probability: value })}
+                  onValueChange={(value) => setFormData({ ...formData, probability: value as "low" | "medium" | "high" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -519,7 +519,7 @@ export default function RisksPage() {
                 <Label htmlFor="impact">Impact *</Label>
                 <Select
                   value={formData.impact}
-                  onValueChange={(value: any) => setFormData({ ...formData, impact: value })}
+                  onValueChange={(value) => setFormData({ ...formData, impact: value as "low" | "medium" | "high" | "critical" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
