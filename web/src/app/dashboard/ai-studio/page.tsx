@@ -368,7 +368,7 @@ export default function AIStudioPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleCopy(item.response?.content || JSON.stringify(item.response))}
+                    onClick={() => handleCopy((item.response as { content?: string })?.content || JSON.stringify(item.response))}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -382,7 +382,7 @@ export default function AIStudioPage() {
                 <div className="text-sm">
                   <div className="font-medium mb-1">Response:</div>
                   <div className="whitespace-pre-wrap text-muted-foreground bg-background p-3 rounded border">
-                    {item.response?.content || JSON.stringify(item.response, null, 2)}
+                    {(item.response as { content?: string }) ?.content || JSON.stringify(item.response, null, 2)}
                   </div>
                 </div>
               </div>
