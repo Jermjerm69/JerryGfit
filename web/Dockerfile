@@ -1,50 +1,53 @@
-# Frontend Dockerfile for CreatorsApp
+# Frontend Dockerfile
+FROM node:20-alpine AS base
 
-# Build stage
-FROM node:18-alpine AS builder
-
-# Set working directory
+# Install dependencies only when needed
+FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (using npm install to handle lock file sync issues)
+RUN npm install
 
-# Copy application code
-COPY . .
-
-# Build application
-RUN npm run build
-
-# Production stage
-FROM node:18-alpine AS runner
-
+# Rebuild the source code only when needed
+FROM base AS builder
 WORKDIR /app
 
-# Set to production
-ENV NODE_ENV=production
+# Copy dependencies
+COPY --from=deps /app/node_modules ./node_modules
 
-# Copy necessary files from builder
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+# Copy all files
+COPY . .
+
+# Set environment variable for build
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+
+# Build the application
+RUN npm run build
+
+# Production image, copy all files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs && \
-    chown -R nextjs:nodejs /app
+    adduser --system --uid 1001 nextjs
+
+# Copy built application
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-# Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Start the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

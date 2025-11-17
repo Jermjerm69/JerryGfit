@@ -74,7 +74,11 @@ export default function AnalyticsPage() {
   ];
 
   // Use velocity data from backend
-  const velocityData = analytics?.velocity_data || [];
+  const velocityData = analytics?.velocity_data?.map(item => ({
+    week: item.week,
+    tasksCompleted: item.tasks_completed,
+    average: item.average
+  })) || [];
 
   // Get metrics from backend
   const completionRate = analytics?.totals.completion_rate || 0;
