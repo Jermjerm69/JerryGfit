@@ -63,8 +63,10 @@ services:
   # Frontend App
   frontend:
     build:
-      context: ./web     
+      context: ./web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: jerrygfit-frontend
     restart: unless-stopped
     ports:
@@ -98,3 +100,5 @@ volumes:
 networks:
   app-network:
     driver: bridge
+
+
