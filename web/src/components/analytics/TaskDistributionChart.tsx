@@ -36,9 +36,9 @@ export function TaskDistributionChart({ data }: TaskDistributionChartProps) {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={(entry: { percent: number; name: string }) => {
-                const percent = entry.percent;
-                const name = entry.name;
+              label={(entry) => {
+                const percent = (entry as { percent?: number }).percent || 0;
+                const name = (entry as { name?: string }).name || '';
                 return `${name}: ${(percent * 100).toFixed(0)}%`;
               }}
               outerRadius={80}
