@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { risksAPI, tasksAPI, Risk, Task, RiskCreate, TaskCreate } from "@/lib/api";
+import { risksAPI, tasksAPI, analyticsAPI, Risk, Task, RiskCreate, TaskCreate, RiskUpdate, TaskUpdate } from "@/lib/api";
+import { BurndownChart } from "@/components/analytics/BurndownChart";
+import { GanttChart } from "@/components/analytics/GanttChart";
 import {
   AlertTriangle,
   CheckCircle,
@@ -35,6 +37,7 @@ import {
   Loader2,
   Pencil,
   Trash2,
+  BarChart3,
 } from "lucide-react";
 
 export default function ProjectsPage() {
@@ -58,6 +61,12 @@ export default function ProjectsPage() {
     queryFn: () => tasksAPI.getAll(),
   });
 
+  // Fetch analytics for burndown chart
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: analyticsAPI.getDashboard,
+  });
+
   // Risk mutations
   const createRiskMutation = useMutation({
     mutationFn: risksAPI.create,
@@ -69,7 +78,7 @@ export default function ProjectsPage() {
   });
 
   const updateRiskMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => risksAPI.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: RiskUpdate }) => risksAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risks'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
@@ -97,7 +106,7 @@ export default function ProjectsPage() {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => tasksAPI.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: TaskUpdate }) => tasksAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
@@ -156,6 +165,7 @@ export default function ProjectsPage() {
       setEditingTask(null);
       setIsTaskDialogOpen(true);
     }
+    // Gantt and Burndown tabs don't have add functionality
   };
 
   const handleEditRisk = (risk: Risk) => {
@@ -194,7 +204,10 @@ export default function ProjectsPage() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button onClick={handleAddNew}>
+          <Button
+            onClick={handleAddNew}
+            disabled={activeTab === "gantt" || activeTab === "burndown"}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add New
           </Button>
@@ -202,16 +215,20 @@ export default function ProjectsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="risks">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="risks" isActive={activeTab === "risks"} onClick={() => setActiveTab("risks")}>
             <AlertTriangle className="h-4 w-4 mr-2" />
             Risk Register
           </TabsTrigger>
-          <TabsTrigger value="tasks">
+          <TabsTrigger value="tasks" isActive={activeTab === "tasks"} onClick={() => setActiveTab("tasks")}>
             <CheckCircle className="h-4 w-4 mr-2" />
             Tasks
           </TabsTrigger>
-          <TabsTrigger value="burndown">
+          <TabsTrigger value="gantt" isActive={activeTab === "gantt"} onClick={() => setActiveTab("gantt")}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Gantt Chart
+          </TabsTrigger>
+          <TabsTrigger value="burndown" isActive={activeTab === "burndown"} onClick={() => setActiveTab("burndown")}>
             <Calendar className="h-4 w-4 mr-2" />
             Burndown
           </TabsTrigger>
@@ -364,17 +381,39 @@ export default function ProjectsPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="gantt" activeValue={activeTab}>
+          {tasksLoading ? (
+            <Card>
+              <CardContent className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </CardContent>
+            </Card>
+          ) : (
+            <GanttChart tasks={tasks} />
+          )}
+        </TabsContent>
+
         <TabsContent value="burndown" activeValue={activeTab}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Burndown Chart</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                Burndown chart visualization coming soon...
-              </div>
-            </CardContent>
-          </Card>
+          {analyticsLoading ? (
+            <Card>
+              <CardContent className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </CardContent>
+            </Card>
+          ) : analytics?.burndown ? (
+            <BurndownChart data={analytics.burndown.data_points || []} />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Burndown Chart</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12 text-muted-foreground">
+                  No burndown data available yet. Start completing tasks to see your progress!
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -436,7 +475,7 @@ function RiskDialog({
   });
 
   // Update form when risk changes
-  useState(() => {
+  useEffect(() => {
     if (risk) {
       setFormData({
         title: risk.title,
@@ -458,7 +497,7 @@ function RiskDialog({
         mitigation_plan: "",
       });
     }
-  });
+  }, [risk]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -618,7 +657,7 @@ function TaskDialog({
   });
 
   // Update form when task changes
-  useState(() => {
+  useEffect(() => {
     if (task) {
       setFormData({
         title: task.title,
@@ -636,7 +675,7 @@ function TaskDialog({
         due_date: null,
       });
     }
-  });
+  }, [task]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

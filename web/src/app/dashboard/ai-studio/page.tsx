@@ -83,9 +83,33 @@ export default function AIStudioPage() {
     onSuccess: (data) => {
       // Format the generated content nicely
       let formattedContent = "";
+
+      interface AIResponseItem {
+        content?: string;
+        tokens_used?: number;
+      }
+
       if (Array.isArray(data.data)) {
-        formattedContent = data.data.map((item: { content?: string }) => item.content || JSON.stringify(item)).join("\n\n");
+        // Handle array of results from AI
+        formattedContent = data.data.map((item: AIResponseItem | string) => {
+          // Each item is an object with "content" and "tokens_used"
+          if (typeof item === 'object' && item !== null && 'content' in item) {
+            return item.content;
+          } else if (typeof item === 'string') {
+            return item;
+          } else {
+            // Fallback to stringify only if it's neither
+            return JSON.stringify(item);
+          }
+        }).join("\n\n");
+      } else if (typeof data.data === 'object' && data.data !== null && 'content' in data.data) {
+        // Handle single object with content property
+        formattedContent = (data.data as AIResponseItem).content || '';
+      } else if (typeof data.data === 'string') {
+        // Handle plain string
+        formattedContent = data.data;
       } else {
+        // Last resort: stringify
         formattedContent = JSON.stringify(data.data, null, 2);
       }
 
@@ -368,7 +392,26 @@ export default function AIStudioPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleCopy((item.response as { content?: string })?.content || JSON.stringify(item.response))}
+                    onClick={() => {
+                      interface AIHistoryResponse {
+                        items?: Array<{ content?: string } | string>;
+                        content?: string;
+                      }
+                      const response = item.response as AIHistoryResponse;
+                      let content = '';
+
+                      if (response?.items && Array.isArray(response.items)) {
+                        content = response.items.map((r: { content?: string } | string) =>
+                          typeof r === 'object' && r !== null && 'content' in r ? r.content : (typeof r === 'string' ? r : JSON.stringify(r))
+                        ).join('\n\n');
+                      } else if (response?.content) {
+                        content = response.content;
+                      } else {
+                        content = JSON.stringify(response, null, 2);
+                      }
+
+                      handleCopy(content);
+                    }}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -382,7 +425,29 @@ export default function AIStudioPage() {
                 <div className="text-sm">
                   <div className="font-medium mb-1">Response:</div>
                   <div className="whitespace-pre-wrap text-muted-foreground bg-background p-3 rounded border">
-                    {(item.response as { content?: string }) ?.content || JSON.stringify(item.response, null, 2)}
+                    {(() => {
+                      // Parse the response correctly
+                      interface AIHistoryResponse {
+                        items?: Array<{ content?: string } | string>;
+                        content?: string;
+                      }
+                      const response = item.response as AIHistoryResponse;
+
+                      // If response has items array (new format)
+                      if (response?.items && Array.isArray(response.items)) {
+                        return response.items.map((r: { content?: string } | string) =>
+                          typeof r === 'object' && r !== null && 'content' in r ? r.content : (typeof r === 'string' ? r : JSON.stringify(r))
+                        ).join('\n\n');
+                      }
+
+                      // If response has content property directly
+                      if (response?.content) {
+                        return response.content;
+                      }
+
+                      // Fallback to stringified JSON
+                      return JSON.stringify(response, null, 2);
+                    })()}
                   </div>
                 </div>
               </div>

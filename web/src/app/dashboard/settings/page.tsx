@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import toast from "react-hot-toast";
 import {
   Settings,
@@ -29,7 +30,7 @@ import {
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,10 +79,10 @@ export default function SettingsPage() {
       const baseUrl = apiUrl.replace('/api/v1', '');
       setProfilePictureUrl(user.profile_picture ? `${baseUrl}/${user.profile_picture}` : null);
       if (user.notification_preferences) {
-        setNotifications(user.notification_preferences);
+        setNotifications(user.notification_preferences as typeof notifications);
       }
       if (user.user_preferences) {
-        setPreferences(user.user_preferences);
+        setPreferences(user.user_preferences as typeof preferences);
       }
     }
   }, [user]);
@@ -104,7 +105,9 @@ export default function SettingsPage() {
       const response = await api.put('/users/me', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Refresh user data in AuthContext to prevent logout
+      await refreshUser();
       queryClient.invalidateQueries({ queryKey: ['user'] });
       setSaveSuccess(true);
       toast.success("Profile updated successfully!");
@@ -125,7 +128,9 @@ export default function SettingsPage() {
       });
       return response.data;
     },
-    onSuccess: (data: { file_path?: string }) => {
+    onSuccess: async (data: { file_path?: string }) => {
+      // Refresh user data in AuthContext
+      await refreshUser();
       queryClient.invalidateQueries({ queryKey: ['user'] });
       // Construct full URL for profile picture
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -372,9 +377,9 @@ export default function SettingsPage() {
                   <CardTitle>Profile Picture</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-center h-32 w-32 mx-auto bg-muted rounded-full overflow-hidden">
+                  <div className="flex items-center justify-center h-32 w-32 mx-auto bg-muted rounded-full overflow-hidden relative">
                     {profilePictureUrl ? (
-                      <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                      <Image src={profilePictureUrl} alt="Profile" fill className="object-cover" />
                     ) : (
                       <User className="h-16 w-16 text-muted-foreground" />
                     )}

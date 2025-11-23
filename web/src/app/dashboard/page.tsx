@@ -172,14 +172,14 @@ export default function DashboardPage() {
                   </div>
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      task.priority === "HIGH" || task.priority === "URGENT"
+                      task.priority === "high" || task.priority === "urgent"
                         ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                        : task.priority === "MEDIUM"
+                        : task.priority === "medium"
                         ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
                         : "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
                     }`}
                   >
-                    {task.priority.toLowerCase()}
+                    {task.priority}
                   </span>
                 </div>
               ))
