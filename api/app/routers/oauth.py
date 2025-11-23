@@ -104,14 +104,14 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
         # Redirect to frontend with tokens
         # Frontend will extract tokens from URL and store them
-        frontend_url = settings.BACKEND_CORS_ORIGINS[0]
+        frontend_url = settings.cors_origins[0]
         redirect_url = f"{frontend_url}/auth/callback?access_token={access_token}&refresh_token={refresh_token}"
 
         return RedirectResponse(url=redirect_url)
 
     except Exception as e:
         # Redirect to frontend with error
-        frontend_url = settings.BACKEND_CORS_ORIGINS[0]
+        frontend_url = settings.cors_origins[0]
         error_message = str(e)
         redirect_url = f"{frontend_url}/auth/login?error={error_message}"
         return RedirectResponse(url=redirect_url)

@@ -21,8 +21,13 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
 
-    # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"]
+    # CORS - Comma-separated string of allowed origins
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001,https://jerrygfit.com,https://www.jerrygfit.com"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Parse CORS origins from comma-separated string to list"""
+        return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
 
     # OpenAI (for future use)
     OPENAI_API_KEY: Optional[str] = None

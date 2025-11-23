@@ -7,6 +7,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from pathlib import Path
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 from app.core.config import settings
 # Import routers directly to avoid circular import issues on Windows
@@ -34,6 +36,16 @@ logger = logging.getLogger(__name__)
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
+# Custom middleware to handle X-Forwarded-Proto for proper HTTPS redirects
+class ForwardedProtoMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Trust X-Forwarded-Proto header from reverse proxy
+        forwarded_proto = request.headers.get("X-Forwarded-Proto", "")
+        if forwarded_proto:
+            request.scope["scheme"] = forwarded_proto
+        response = await call_next(request)
+        return response
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -45,10 +57,13 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Add ForwardedProto middleware first (before CORS)
+app.add_middleware(ForwardedProtoMiddleware)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

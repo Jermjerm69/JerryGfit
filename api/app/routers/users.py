@@ -161,13 +161,17 @@ def export_account_data(
         "updated_at": current_user.updated_at.isoformat(),
     }
 
+    # Helper function to convert SQLAlchemy objects to dict
+    def to_dict(obj):
+        return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
+
     return {
         "user": user_data,
-        "tasks": [task.__dict__ for task in tasks],
-        "risks": [risk.__dict__ for risk in risks],
-        "projects": [project.__dict__ for project in projects],
-        "posts": [post.__dict__ for post in posts],
-        "ai_requests": [req.__dict__ for req in ai_requests],
+        "tasks": [to_dict(task) for task in tasks],
+        "risks": [to_dict(risk) for risk in risks],
+        "projects": [to_dict(project) for project in projects],
+        "posts": [to_dict(post) for post in posts],
+        "ai_requests": [to_dict(req) for req in ai_requests],
     }
 
 
