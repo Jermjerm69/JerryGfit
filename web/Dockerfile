@@ -1,5 +1,6 @@
 # Frontend Dockerfile
-FROM node:20-alpine AS base
+# Use specific version to avoid vulnerabilities
+FROM node:20.18.1-alpine3.20 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -15,14 +16,17 @@ RUN npm install
 FROM base AS builder
 WORKDIR /app
 
+# Accept build argument for API URL
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy all files
 COPY . .
 
-# Set environment variable for build
-ENV NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+# Set environment variable for build (from ARG)
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Build the application
 RUN npm run build
