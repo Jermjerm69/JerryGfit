@@ -5,8 +5,8 @@ Creates realistic demo data for all models to showcase features
 
 import asyncio
 from datetime import datetime, timedelta, timezone
-from sqlalchemy.orm import Session
-from passlib.context import CryptContext
+from sqlalchemy.orm import Session # type: ignore
+from passlib.context import CryptContext # type: ignore
 
 from app.database import SessionLocal
 from app.models.user import User, UserRole
